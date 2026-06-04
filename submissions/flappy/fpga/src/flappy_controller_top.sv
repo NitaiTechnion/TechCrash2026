@@ -39,7 +39,6 @@ module flappy_controller_top (
 
     reg [22:0] debounce_cnt;
     reg [22:0] diff_tick_cnt;
-    reg [21:0] flap_led_cnt;
 
     reg flap_event;
     reg diff_tick;
@@ -86,7 +85,7 @@ module flappy_controller_top (
     assign HEX4 = 8'hFF;
     assign HEX5 = 8'hFF;
 
-    assign LEDR = {4'b0, (flap_led_cnt != 22'd0), ~key0_sync, difficulty};
+    assign LEDR = {6'b0, difficulty};
 
     assign ARDUINO_IO[0]    = 1'bz;
     assign ARDUINO_IO[1]    = tx_out;
@@ -100,7 +99,6 @@ module flappy_controller_top (
             key0_prev     <= 1'b1;
             debounce_cnt  <= 23'd0;
             diff_tick_cnt <= 23'd0;
-            flap_led_cnt  <= 22'd0;
             flap_event    <= 1'b0;
             diff_tick     <= 1'b0;
         end else begin
@@ -120,12 +118,6 @@ module flappy_controller_top (
 
             if (debounce_cnt != 23'd0) begin
                 debounce_cnt <= debounce_cnt - 23'd1;
-            end
-
-            if (flap_event) begin
-                flap_led_cnt <= 22'd1_000_000;
-            end else if (flap_led_cnt != 22'd0) begin
-                flap_led_cnt <= flap_led_cnt - 22'd1;
             end
 
             if (diff_tick_cnt == DIFF_TX_TICKS - 23'd1) begin

@@ -105,17 +105,13 @@ void resetGame() {
 
 void flapAction() {
     if (gameState == GameState::GameOver) {
-        Serial.println("[GAME] restart");
         resetGame();
         return;
     }
     pendingFlap = true;
-    Serial.println("[GAME] flap");
 }
 
 void processLine(const String &line) {
-    Serial.printf("[UART] %s\n", line.c_str());
-
     if (line == "FLAP") {
         flapAction();
         return;
@@ -125,7 +121,6 @@ void processLine(const String &line) {
         String valueText = line.substring(5);
         int parsed = parseDifficultyValue(valueText);
         applyDifficulty(parsed);
-        Serial.printf("[GAME] difficulty=%d speed=%.2f gap=%d\n", difficulty, obstacleSpeed, obstacleGap);
     }
 }
 
@@ -175,7 +170,6 @@ void updateGameTick() {
 
     if (birdY <= 0 || (birdY + BIRD_SIZE) >= SCREEN_H) {
         gameState = GameState::GameOver;
-        Serial.printf("[GAME] over (wall) score=%u\n", score);
         return;
     }
 
@@ -198,7 +192,6 @@ void updateGameTick() {
 
         if (birdHitsPipe(pipes[i])) {
             gameState = GameState::GameOver;
-            Serial.printf("[GAME] over (pipe) score=%u\n", score);
             return;
         }
     }
@@ -248,8 +241,6 @@ void renderGame() {
 void setup() {
     Serial.begin(115200);
     delay(200);
-    Serial.println();
-    Serial.println("[BOOT] flappy esp32 start");
 
     randomSeed((uint32_t)esp_random());
 
@@ -260,7 +251,6 @@ void setup() {
 
     applyDifficulty(0);
     resetGame();
-    Serial.println("[BOOT] ready");
 }
 
 void loop() {
