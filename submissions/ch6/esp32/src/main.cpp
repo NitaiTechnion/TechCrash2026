@@ -6,12 +6,22 @@
 // ============================================================
 
 #include <Arduino.h>
+#include <Wire.h>
+#include "../../../../projects/common/esp32/pin_config.h"
 
 // UART to FPGA
 HardwareSerial FpgaSerial(2);
 
 // Buffer for incoming UART data
 String fpgaBuffer = "";
+
+int8_t sinewave[256];
+
+void createSineWave(uint32_t frequency) {
+    for (int i = 0; i < 256; i++) {
+        sinewave[i] = (int8_t)(127 * sin(2 * PI * frequency * i / 8000));
+    }
+}
 
 void setup() {
     Serial.begin(115200);
@@ -22,45 +32,26 @@ void setup() {
     Serial.println(" Frequency Detector (ESP32 side)");
     Serial.println("========================================");
 
-    // Initialize FPGA UART (RX=GPIO16, TX=GPIO17, 9600 baud)
-    FpgaSerial.begin(9600, SERIAL_8N1, 16, 17);
-    
-    Serial.println("Waiting for FPGA frequency data...");
+    // FPGA UART init
+    FpgaSerial.begin(115200, SERIAL_8N1, PIN_FPGA_RX, PIN_FPGA_TX);
 }
 
 void loop() {
-    // Check for incoming FPGA data
-    while (FpgaSerial.available()) {
-        char c = FpgaSerial.read();
-        if (c == '\n') {
-            // Process complete line from FPGA
-            Serial.print("FPGA: ");
-            Serial.println(fpgaBuffer);
-            fpgaBuffer = "";
-        } else {
-            fpgaBuffer += c;
-        }
+    // Read potentiometer
+    int potValue = analogRead(PIN_POT);
+    uint32_t freq = map(potValue, 0, 4095, 100, 2000); // Map to 100-2000
+
+    // Generate sine wave
+    createSineWave(freq);
+
+    Serial.println("Sending " + String(freq) + " Hz sine wave to FPGA...");
+
+    // Send sine wave to FPGA
+    for (int i = 0; i < 256; i++) {
+        FpgaSerial.write(sinewave[i]);
     }
 
-    // Check for commands from serial console
-    if (Serial.available()) {
-        String cmd = Serial.readStringUntil('\n');
-        cmd.trim();
-        
-        if (cmd == "START") {
-            FpgaSerial.println("START");
-            Serial.println("Command sent: START");
-        } else if (cmd == "STOP") {
-            FpgaSerial.println("STOP");
-            Serial.println("Command sent: STOP");
-        } else if (cmd == "READ") {
-            FpgaSerial.println("READ");
-            Serial.println("Command sent: READ");
-        } else if (cmd != "") {
-            Serial.println("Unknown command: " + cmd);
-            Serial.println("Available: START, STOP, READ");
-        }
-    }
+    Serial.println("Done.");
 
-    delay(10);
+    delay(200);
 }
