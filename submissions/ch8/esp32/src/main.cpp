@@ -28,6 +28,7 @@ uint8_t fpga_sw_hi = 0;    // SW[9:5]
 bool    fpga_key0  = true;  // raw bit (active-low: false = pressed)
 bool    fpga_key1  = true;
 bool    fpga_valid = false;
+uint16_t last_packed = 0xFFFF;
 
 // ---- Display throttle ----
 unsigned long displayTimer = 0;
@@ -39,6 +40,18 @@ void drawSwBox(int x, int y, bool on) {
         oled.fillRect(x, y, 10, 12, SSD1306_WHITE);
     else
         oled.drawRect(x, y, 10, 12, SSD1306_WHITE);
+}
+
+void emitPackedStateIfChanged() {
+    uint16_t sw10 = ((uint16_t)(fpga_sw_hi & 0x1F) << 5) | (fpga_sw_lo & 0x1F);
+    uint16_t key1Pressed = fpga_key1 ? 0 : 1;
+    uint16_t key0Pressed = fpga_key0 ? 0 : 1;
+    uint16_t packed = (sw10 << 2) | (key1Pressed << 1) | key0Pressed;
+
+    if (packed != last_packed) {
+        last_packed = packed;
+        Serial.printf("%03X\n", packed);
+    }
 }
 
 void setup() {
@@ -65,13 +78,14 @@ void loop() {
             fpga_sw_lo = (b >> 1) & 0x1F;
             fpga_key0  = (b & 0x01) != 0;
             fpga_valid = true;
+            emitPackedStateIfChanged();
         } else if (hdr == 0x02) {
             // byte 1: {2'b10, SW[9:5], KEY[1]}
             fpga_sw_hi = (b >> 1) & 0x1F;
             fpga_key1  = (b & 0x01) != 0;
             fpga_valid = true;
+            emitPackedStateIfChanged();
         }
-        Serial.printf("[FPGA] 0x%02X  hdr=%d\n", b, hdr);
     }
 
     // ---- Update OLED ----
