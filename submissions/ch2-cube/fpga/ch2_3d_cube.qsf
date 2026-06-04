@@ -13,6 +13,7 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 
 # ---- Source Files ----
 set_global_assignment -name SYSTEMVERILOG_FILE src/ch2_3d_cube_top.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/master_I2C.sv
 
 # ---- Clock ----
 set_location_assignment PIN_P11 -to MAX10_CLK1_50

@@ -39,11 +39,42 @@ module ch2_3d_cube_top (
     assign ARDUINO_IO[1]    = uart_tx_out;
     assign ARDUINO_IO[15:2] = 14'bz;
 
-    // ---- GSENSOR pins (not yet implemented) ----
-    assign GSENSOR_SDI   = 1'bz;     // tri-state (I2C SDA / SPI MOSI)
-    assign GSENSOR_SDO   = 1'bz;     // tri-state (I2C addr / SPI MISO)
-    assign GSENSOR_CS_n  = 1'b1;     // idle high (enables I2C mode)
-    assign GSENSOR_SCLK  = 1'bz;     // tri-state (I2C SCL / SPI clock)
+    // ---- GSENSOR I2C master ----
+    // GSENSOR_CS_n held high => I2C mode
+    // GSENSOR_SDO held high  => I2C address 0x1D (write 0x3A, read 0x3B)
+    assign GSENSOR_CS_n = 1'b1;
+    assign GSENSOR_SDO  = 1'b1;
+
+    // I2C wires (open-drain emulated via master_I2C bidir ports)
+    wire i2c_start;
+    wire [7:0]  i2c_addr;
+    wire [23:0] i2c_data_send;    // up to 3 bytes send (BYTES_SEND_LOG=2)
+    wire [1:0]  i2c_num_bytes_send;
+    wire [1:0]  i2c_num_bytes_receive;
+    wire [23:0] i2c_data_received;
+
+    master_I2C #(
+        .BYTES_SEND_LOG    (2),
+        .BYTES_RECEIVE_LOG (2)
+    ) u_i2c_master (
+        .rst               (rst_n),
+        .clk               (clk),
+        .start             (i2c_start),
+        .addr_target       (i2c_addr),
+        .data_send         (i2c_data_send),
+        .num_bytes_send    (i2c_num_bytes_send),
+        .num_bytes_receive (i2c_num_bytes_receive),
+        .SDA_bidir         (GSENSOR_SDI),
+        .SCL_bidir         (GSENSOR_SCLK),
+        .data_received     (i2c_data_received)
+    );
+
+    // Drive I2C inputs to idle (no transaction)
+    assign i2c_start            = 1'b0;
+    assign i2c_addr             = 8'h3B;   // ADXL345 read address
+    assign i2c_data_send        = 24'h0;
+    assign i2c_num_bytes_send   = 2'd0;
+    assign i2c_num_bytes_receive = 2'd0;
     // GSENSOR_INT1 and INT2 are inputs; can add capture logic later
 
     localparam CLKS_PER_BIT = 13'd5208;  // 50_000_000 / 9600
