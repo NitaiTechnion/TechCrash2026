@@ -4,7 +4,7 @@
 // Continuously transmits SW/KEY state over UART at full channel speed.
 //   byte 0: {2'b01, SW[4:0], KEY[0]}
 //   byte 1: {2'b10, SW[9:5], KEY[1]}
-// Alternates between the two bytes back-to-back.
+// Alternates between the two bytes with a 20 ms gap between each.
 //
 // ARDUINO_IO[1] = UART TX (to ESP32 GPIO17)    Arduino header IO1
 // 9600 baud 8N1, 50 MHz clock
@@ -73,19 +73,30 @@ module game_controller_top (
     end
 
     // ================================================================
-    //  TX dispatch: alternate byte 0 and byte 1 as fast as possible
+    //  TX dispatch: alternate byte 0 and byte 1 with 20 ms gap
     // ================================================================
-    reg byte_sel;  // 0 = send byte 0, 1 = send byte 1
+    localparam GAP_CLKS = 20'd1_000_000;  // 20 ms @ 50 MHz
+
+    reg        byte_sel;   // 0 = send byte 0, 1 = send byte 1
+    reg        waiting;    // 1 while gap counter is running
+    reg [19:0] gap_cnt;
 
     always @(posedge clk) begin
         tx_start <= 0;
-        if (!tx_busy && !tx_start) begin
+        if (waiting) begin
+            if (gap_cnt == GAP_CLKS - 1)
+                waiting <= 0;
+            else
+                gap_cnt <= gap_cnt + 1;
+        end else if (!tx_busy && !tx_start) begin
             if (byte_sel == 1'b0)
                 tx_data <= {2'b01, SW[4:0], KEY[0]};
             else
                 tx_data <= {2'b10, SW[9:5], KEY[1]};
             tx_start  <= 1;
             byte_sel  <= ~byte_sel;
+            waiting   <= 1;
+            gap_cnt   <= 0;
         end
     end
 
