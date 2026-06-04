@@ -1,0 +1,5 @@
+PROJECT_REVISION = "flappy_controller"
+
+QUARTUS_VERSION = "17.1"
+
+DATE = "2026/06/05"

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Bird Embedded - CrashTech VLSI 2026</title>
+  <style>
+    :root {
+      --bg: #0f1b2b;
+      --card: #14263d;
+      --accent: #ffc857;
+      --text: #f2f7ff;
+      --muted: #b8c5d6;
+      --ok: #7dd87d;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at 20% 10%, #1d3557 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+    .card {
+      width: min(860px, 100%);
+      background: linear-gradient(165deg, #19304d, var(--card));
+      border: 1px solid #2a4668;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+    h1 { margin-top: 0; color: var(--accent); }
+    h2 { margin-bottom: 8px; }
+    p, li { color: var(--muted); }
+    code { color: var(--ok); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Embedded Flappy Bird</h1>
+    <p>ESP32 renders gameplay on OLED. FPGA reads <code>KEY[0]</code> and <code>SW[3:0]</code>, then streams flap + difficulty over UART.</p>
+    <h2>UART Protocol</h2>
+    <ul>
+      <li><code>FLAP\n</code>: sent on each valid KEY[0] press</li>
+      <li><code>DIFF:n\n</code>: periodic difficulty stream, <code>n</code> from 0 to 15</li>
+    </ul>
+    <h2>Controls</h2>
+    <ul>
+      <li>KEY[0]: flap while playing, restart when game over</li>
+      <li>SW[3:0]: difficulty (0 easy, 15 hard)</li>
+    </ul>
+    <h2>Build</h2>
+    <ul>
+      <li>FPGA: <code>quartus_sh.exe --flow compile flappy_controller</code> in <code>submissions/flappy/fpga</code></li>
+      <li>ESP32: <code>pio run -t upload</code> in <code>submissions/flappy/esp32</code></li>
+    </ul>
+  </main>
+</body>
+</html>
