@@ -136,4 +136,18 @@ set_location_assignment PIN_F16  -to ARDUINO_RESET_N
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ARDUINO_IO[*]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ARDUINO_RESET_N
 
+# ---- GSENSOR (Accelerometer I2C/SPI) ----
+set_location_assignment PIN_V11 -to GSENSOR_SDI
+set_location_assignment PIN_V12 -to GSENSOR_SDO
+set_location_assignment PIN_AB16 -to GSENSOR_CS_n
+set_location_assignment PIN_AB15 -to GSENSOR_SCLK
+set_location_assignment PIN_Y14 -to GSENSOR_INT1
+set_location_assignment PIN_Y13 -to GSENSOR_INT2
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GSENSOR_SDI
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GSENSOR_SDO
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GSENSOR_CS_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GSENSOR_SCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GSENSOR_INT1
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GSENSOR_INT2
+
 set_global_assignment -name LAST_QUARTUS_VERSION "17.1.0 Lite Edition"

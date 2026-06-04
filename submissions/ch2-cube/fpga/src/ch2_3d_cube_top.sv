@@ -19,7 +19,14 @@ module ch2_3d_cube_top (
     input   [1:0]   KEY,
     output  [9:0]   LEDR,
     output  [7:0]   HEX0, HEX1, HEX2, HEX3, HEX4, HEX5,
-    inout   [15:0]  ARDUINO_IO
+    inout   [15:0]  ARDUINO_IO,
+    // GSENSOR pins (I2C/SPI accelerometer interface)
+    inout           GSENSOR_SDI,       // PIN_V11 - I2C SDA / SPI data
+    inout           GSENSOR_SDO,       // PIN_V12 - I2C addr select / SPI data out
+    output          GSENSOR_CS_n,      // PIN_AB16 - I2C/SPI mode select
+    inout           GSENSOR_SCLK,      // PIN_AB15 - I2C SCL / SPI clock
+    input           GSENSOR_INT1,      // PIN_Y14 - Interrupt 1
+    input           GSENSOR_INT2       // PIN_Y13 - Interrupt 2
 );
 
     wire clk   = MAX10_CLK1_50;
@@ -31,6 +38,13 @@ module ch2_3d_cube_top (
     assign ARDUINO_IO[0]    = 1'bz;       // explicit input (tri-state driver)
     assign ARDUINO_IO[1]    = uart_tx_out;
     assign ARDUINO_IO[15:2] = 14'bz;
+
+    // ---- GSENSOR pins (not yet implemented) ----
+    assign GSENSOR_SDI   = 1'bz;     // tri-state (I2C SDA / SPI MOSI)
+    assign GSENSOR_SDO   = 1'bz;     // tri-state (I2C addr / SPI MISO)
+    assign GSENSOR_CS_n  = 1'b1;     // idle high (enables I2C mode)
+    assign GSENSOR_SCLK  = 1'bz;     // tri-state (I2C SCL / SPI clock)
+    // GSENSOR_INT1 and INT2 are inputs; can add capture logic later
 
     localparam CLKS_PER_BIT = 13'd5208;  // 50_000_000 / 9600
 
