@@ -3,7 +3,7 @@
 
 module uart_rx #(
     parameter CLK_FREQ = 50_000_000,
-    parameter BAUD     = 9600
+    parameter BAUD     = 40_000
 )(
     input        clk,
     input        rst_n,

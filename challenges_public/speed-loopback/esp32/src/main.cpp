@@ -34,7 +34,7 @@ void setup() {
     }
 
     // Baseline: 9600 baud single UART
-    FpgaSerial.begin(FPGA_BAUD, SERIAL_8N1, PIN_FPGA_RX, PIN_FPGA_TX);
+    FpgaSerial.begin(40000, SERIAL_8N1, PIN_FPGA_RX, PIN_FPGA_TX);
 
     display.clearDisplay();
     display.setTextSize(1);
