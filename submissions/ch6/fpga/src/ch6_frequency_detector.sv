@@ -36,7 +36,7 @@ module ch6_frequency_detector (
     assign ARDUINO_IO[1]    = uart_tx_out;
     assign ARDUINO_IO[15:2] = 14'bz;
 
-    localparam CLKS_PER_BIT = 13'd5208;     // 50_000_000 / 9600
+    localparam CLKS_PER_BIT = 50_000_000 / 115200;
 
     // ================================================================
     //  UART RX engine
@@ -102,13 +102,14 @@ module ch6_frequency_detector (
         end
     end
 
-    reg [15:0] wave_posedge_cnt;
+    reg [8:0] wave_posedge_cnt;
 	 reg [8:0] wave_samp_cnt;
-    reg [7:0] wave_prev;
-    reg [7:0] wave_idx;
+    reg [8:0] wave_prev;
+    reg [8:0] wave_idx;
 	 reg [31:0] rx_delay;
+	 bit waiting;
 
-    wire [10:0] wave_freq = wave_posedge_cnt / wave_samp_cnt;
+    wire [15:0] wave_freq =  16'd8000 * wave_posedge_cnt / wave_samp_cnt;
 
     // ================================================================
     //  RX wave data and estimate frequency
@@ -116,25 +117,33 @@ module ch6_frequency_detector (
     reg [3:0] rx_digit;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            wave_prev <= 8'd0;
-            wave_idx <= 8'd0;
+            wave_prev <= 9'd0;
+            wave_idx <= 9'd0;
             wave_posedge_cnt <= 16'd0;
 				rx_delay <= 32'd0;
+				waiting <= 1'b1;
         end else if (rx_done) begin
-            wave_idx <= wave_idx + 8'd1;
+				waiting <= 1'b0;
+				wave_prev <= rx_byte;
+            wave_idx <= wave_idx + 9'd1;
             if (wave_prev[7] && !rx_byte[7]) begin
                 // wave pos edge
-                wave_posedge_cnt <= wave_posedge_cnt + 16'd1;
-					 wave_samp_cnt <= wave_idx + 8'd1;
+                wave_posedge_cnt <= wave_posedge_cnt + 9'd1;
+					 wave_samp_cnt <= wave_idx + 9'd1;
             end
         end else if (rx_state == RX_IDLE) begin
-				// long delay => reset to wave start
+				// long delay (100ms) => reset to wave start
 				rx_delay <= rx_delay + 32'd1;
 				if (rx_delay > 32'd5_000_000) begin
-					wave_idx <= 8'd0;
+					wave_idx <= 9'd0;
+					waiting <= 1'b1;
 				end
         end else begin
 				rx_delay <= 32'd0;
+				if (waiting) begin
+					// receiving new transmission after wait - reset count
+					wave_posedge_cnt <= 0;
+				end
 		  end
     end
 
@@ -159,12 +168,33 @@ module ch6_frequency_detector (
     endfunction
 
     // Extract BCD digits from frequency result
-    wire [3:0] digit0 = wave_freq % 10;
-    wire [3:0] digit1 = (wave_freq / 10) % 10;
-    wire [3:0] digit2 = (wave_freq / 100) % 10;
-    wire [3:0] digit3 = (wave_freq / 1000) % 10;
-    wire [3:0] digit4 = (wave_freq / 10000) % 10;
-    wire [3:0] digit5 = (wave_freq / 100000) % 10;
+
+    wire [3:0] digit0;
+    wire [3:0] digit1;
+    wire [3:0] digit2;
+    wire [3:0] digit3;
+    wire [3:0] digit4;
+    wire [3:0] digit5;
+
+	always begin
+		if (SW[9]) begin
+			// debug mode
+			digit0 = wave_posedge_cnt % 10;
+			digit1 = (wave_posedge_cnt / 10) % 10;
+			digit2 = (wave_posedge_cnt / 100) % 10;
+			digit3 = wave_samp_cnt % 10;
+			digit4 = (wave_samp_cnt / 10) % 10;
+			digit5 = (wave_samp_cnt / 100) % 10;
+		end else begin
+			// normal mode
+			digit0 = wave_freq % 10;
+			digit1 = (wave_freq / 10) % 10;
+			digit2 = (wave_freq / 100) % 10;
+			digit3 = (wave_freq / 1000) % 10;
+			digit4 = 4'hE; // blank
+			digit5 = 4'hE; // blank
+		end
+	end
 
     assign HEX0 = seg7(digit0);
     assign HEX1 = seg7(digit1);
@@ -176,7 +206,9 @@ module ch6_frequency_detector (
     // ================================================================
     //  Status LEDs
     // ================================================================
-    assign LEDR[9:0] = 9'b0;
+    assign LEDR[9] = 1'b0;
+	 assign LEDR[8:1] = wave_idx;
+	 assign LEDR[0] = waiting;
 
     // ================================================================
     //  UART RX (for future commands)

@@ -7,6 +7,8 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 #include "../../../../projects/common/esp32/pin_config.h"
 
 // UART to FPGA
@@ -50,7 +52,7 @@ void loop() {
     createSineWave(freq);
 
     Serial.println("adcRaw = " + String(adcRaw) + ", freq=" + String(freq));
-
+    Serial.println("Last 5 samples:" + String(sinewave[251]) + ", " + String(sinewave[252]) + ", " + String(sinewave[253]) + ", " + String(sinewave[254]) + ", " + String(sinewave[255]));
     Serial.println("Sending " + String(freq) + " Hz sine wave to FPGA...");
 
     // Send sine wave to FPGA
@@ -60,5 +62,5 @@ void loop() {
 
     Serial.println("Done.");
 
-    delay(200);
+    delay(500);
 }
