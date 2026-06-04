@@ -32,17 +32,24 @@ void setup() {
     Serial.println(" Frequency Detector (ESP32 side)");
     Serial.println("========================================");
 
+    // ADC setup for potentiometer
+    pinMode(PIN_ANALOG_IN, INPUT);
+    analogReadResolution(12);           // 12-bit resolution (0-4095)
+    analogSetAttenuation(ADC_11db);     // Full 3.3V range
+
     // FPGA UART init
     FpgaSerial.begin(115200, SERIAL_8N1, PIN_FPGA_RX, PIN_FPGA_TX);
 }
 
 void loop() {
     // Read potentiometer
-    int potValue = analogRead(PIN_POT);
-    uint32_t freq = map(potValue, 0, 4095, 100, 2000); // Map to 100-2000
+    int adcRaw = analogRead(PIN_ANALOG_IN);
+    uint32_t freq = map(adcRaw, 0, 4095, 100, 2000); // Map to 100-2000
 
     // Generate sine wave
     createSineWave(freq);
+
+    Serial.println("adcRaw = " + String(adcRaw) + ", freq=" + String(freq));
 
     Serial.println("Sending " + String(freq) + " Hz sine wave to FPGA...");
 
