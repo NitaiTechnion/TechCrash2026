@@ -7,8 +7,6 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 #include "../../../../projects/common/esp32/pin_config.h"
 
 // UART to FPGA

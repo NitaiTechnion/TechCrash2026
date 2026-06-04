@@ -176,6 +176,7 @@ module ch6_frequency_detector (
     wire [3:0] digit3;
     wire [3:0] digit4;
     wire [3:0] digit5;
+			integer i;
 
 	always begin
 		if (SW[9]) begin
@@ -186,6 +187,8 @@ module ch6_frequency_detector (
 			digit3 = wave_samp_cnt % 10;
 			digit4 = (wave_samp_cnt / 10) % 10;
 			digit5 = (wave_samp_cnt / 100) % 10;
+			LEDR[9:1] = wave_freq[11:3];
+			LEDR[0] = waiting;
 		end else begin
 			// normal mode
 			digit0 = wave_freq % 10;
@@ -194,6 +197,10 @@ module ch6_frequency_detector (
 			digit3 = (wave_freq / 1000) % 10;
 			digit4 = 4'hE; // blank
 			digit5 = 4'hE; // blank
+			for (i=0; i<10; i++)
+			  begin
+				 LEDR[i] <= (wave_freq > 100 + (i*(2000-100)/9)) ;
+			  end
 		end
 	end
 
@@ -207,8 +214,6 @@ module ch6_frequency_detector (
     // ================================================================
     //  Status LEDs
     // ================================================================
-    assign LEDR[9:1] = wave_freq[11:3];
-	 assign LEDR[0] = waiting;
 
     // ================================================================
     //  UART RX (for future commands)
