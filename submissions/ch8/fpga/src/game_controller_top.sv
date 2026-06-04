@@ -1,5 +1,5 @@
 // ============================================================
-// CrashTech VLSI-2026 -- Alive Test (FPGA side)
+// CrashTech VLSI-2026 -- Game Controller (FPGA side)
 // ============================================================
 // Bidirectional UART demo:
 //   HEX0  = rolling digit 0-9 (count UP, sent to ESP32 via TX)
@@ -13,7 +13,7 @@
 // 9600 baud 8N1, 50 MHz clock
 // ============================================================
 
-module alive_test_top (
+module game_controller_top (
     input           MAX10_CLK1_50,
     input   [9:0]   SW,
     input   [1:0]   KEY,

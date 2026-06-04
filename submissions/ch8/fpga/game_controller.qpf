@@ -2,4 +2,4 @@ QUARTUS_VERSION = "17.1"
 DATE = "2026.05.04"
 
 # Revisions
-PROJECT_REVISION = "alive_test"
+PROJECT_REVISION = "game_controller"

@@ -1,5 +1,5 @@
 // ============================================================
-// CrashTech VLSI-2026 — Alive Test (ESP32 side)
+// CrashTech VLSI-2026 — Game Controller (ESP32 side)
 // ============================================================
 // Interactive demo that exercises ALL kit peripherals at once:
 //   - 3 LEDs blink continuously (chasing pattern)
@@ -70,7 +70,7 @@ void setup() {
     delay(300);
     Serial.println();
     Serial.println("========================================");
-    Serial.println(" CrashTech VLSI-2026 — Alive Test");
+    Serial.println(" CrashTech VLSI-2026 — Game Controller");
     Serial.println("========================================");
     Serial.println(" LEDs: chasing");
     Serial.println(" Buttons: press for buzz + OLED");
@@ -185,7 +185,7 @@ void loop() {
         // Title
         oled.setTextSize(1);
         oled.setCursor(0, 0);
-        oled.println("  ALIVE TEST");
+        oled.println("  GAME CONTROLLER");
         oled.drawFastHLine(0, 10, 128, SSD1306_WHITE);
 
         // Buttons
