@@ -39,44 +39,86 @@ module ch6_frequency_detector (
     localparam CLKS_PER_BIT = 13'd5208;     // 50_000_000 / 9600
 
     // ================================================================
-    //  Frequency Counter
+    //  UART RX engine
     // ================================================================
-    localparam MEASURE_WINDOW = 26'd50_000_000;  // 1 second at 50 MHz
-    
-    reg [25:0] window_cnt;
-    reg [19:0] edge_count;                  // count up to ~1 MHz
-    reg [19:0] freq_result;                 // latched result
-    reg        freq_input_r1, freq_input_r2;
-    reg        measurement_active;
-    wire       rising_edge = !freq_input_r2 && freq_input_r1;
+    reg rx_s1, rx_s2;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin rx_s1 <= 1; rx_s2 <= 1; end
+        else begin rx_s1 <= uart_rx_in; rx_s2 <= rx_s1; end
+    end
+    wire rx_bit = rx_s2;
+
+    reg [1:0]  rx_state;
+    reg [12:0] rx_clk_cnt;
+    reg [2:0]  rx_bit_idx;
+    reg [7:0]  rx_shift;
+    reg        rx_done;
+    reg [7:0]  rx_byte;
+
+    localparam RX_IDLE = 2'd0, RX_START = 2'd1, RX_DATA = 2'd2, RX_STOP = 2'd3;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            window_cnt = 0;
-            edge_count = 0;
-            freq_result = 0;
-            freq_input_r1 = 0;
-            freq_input_r2 = 0;
-            measurement_active = 1;
+            rx_state <= RX_IDLE; rx_clk_cnt <= 0; rx_bit_idx <= 0;
+            rx_shift <= 0; rx_byte <= 0; rx_done <= 0;
         end else begin
-            // Synchronize input
-            freq_input_r2 <= freq_input_r1;
-            freq_input_r1 <= freq_input;
-            
-            // Count edges during measurement window
-            if (measurement_active) begin
-                if (rising_edge) begin
-                    edge_count <= edge_count + 1;
+            rx_done <= 0;
+            case (rx_state)
+                RX_IDLE: if (rx_bit == 0) begin
+                    rx_clk_cnt <= 0;
+                    rx_state   <= RX_START;
                 end
-                
-                if (window_cnt == MEASURE_WINDOW - 1) begin
-                    window_cnt <= 0;
-                    freq_result <= edge_count;
-                    edge_count <= 0;
-                end else begin
-                    window_cnt <= window_cnt + 1;
+                RX_START: begin
+                    if (rx_clk_cnt == (CLKS_PER_BIT-1)/2) begin
+                        if (rx_bit == 0) begin
+                            rx_clk_cnt <= 0;
+                            rx_bit_idx <= 0;
+                            rx_state   <= RX_DATA;
+                        end else
+                            rx_state <= RX_IDLE;
+                    end else
+                        rx_clk_cnt <= rx_clk_cnt + 1;
                 end
+                RX_DATA: begin
+                    if (rx_clk_cnt == CLKS_PER_BIT - 1) begin
+                        rx_clk_cnt <= 0;
+                        rx_shift[rx_bit_idx] <= rx_bit;
+                        if (rx_bit_idx == 7)
+                            rx_state <= RX_STOP;
+                        else
+                            rx_bit_idx <= rx_bit_idx + 1;
+                    end else
+                        rx_clk_cnt <= rx_clk_cnt + 1;
+                end
+                RX_STOP: begin
+                    if (rx_clk_cnt == CLKS_PER_BIT - 1) begin
+                        rx_byte  <= rx_shift;
+                        rx_done  <= 1;
+                        rx_state <= RX_IDLE;
+                    end else
+                        rx_clk_cnt <= rx_clk_cnt + 1;
+                end
+            endcase
+        end
+    end
+
+    reg [7:0] wavebuffer [0:255];
+    reg [7:0] wave_idx;
+
+    // ================================================================
+    //  RX digit latch: ASCII '0'-'9' -> 0-9
+    // ================================================================
+    reg [3:0] rx_digit;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            for (i=0; i<256; i++)
+            begin
+                wavebuffer[i] <= 8'd0;
             end
+            wave_idx <= 8'd0;
+        end else if (rx_done) begin
+            wavebuffer[i] <= rx_byte;
+            wave_idx <= wave_idx + 8'd1;
         end
     end
 
