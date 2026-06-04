@@ -102,24 +102,40 @@ module ch6_frequency_detector (
         end
     end
 
-    reg [7:0] wavebuffer [0:255];
+    reg [15:0] wave_posedge_cnt;
+	 reg [8:0] wave_samp_cnt;
+    reg [7:0] wave_prev;
     reg [7:0] wave_idx;
+	 reg [31:0] rx_delay;
+
+    wire [10:0] wave_freq = wave_posedge_cnt / wave_samp_cnt;
 
     // ================================================================
-    //  RX digit latch: ASCII '0'-'9' -> 0-9
+    //  RX wave data and estimate frequency
     // ================================================================
     reg [3:0] rx_digit;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            for (i=0; i<256; i++)
-            begin
-                wavebuffer[i] <= 8'd0;
-            end
+            wave_prev <= 8'd0;
             wave_idx <= 8'd0;
+            wave_posedge_cnt <= 16'd0;
+				rx_delay <= 32'd0;
         end else if (rx_done) begin
-            wavebuffer[i] <= rx_byte;
             wave_idx <= wave_idx + 8'd1;
-        end
+            if (wave_prev[7] && !rx_byte[7]) begin
+                // wave pos edge
+                wave_posedge_cnt <= wave_posedge_cnt + 16'd1;
+					 wave_samp_cnt <= wave_idx + 8'd1;
+            end
+        end else if (rx_state == RX_IDLE) begin
+				// long delay => reset to wave start
+				rx_delay <= rx_delay + 32'd1;
+				if (rx_delay > 32'd5_000_000) begin
+					wave_idx <= 8'd0;
+				end
+        end else begin
+				rx_delay <= 32'd0;
+		  end
     end
 
     // ================================================================
@@ -143,12 +159,12 @@ module ch6_frequency_detector (
     endfunction
 
     // Extract BCD digits from frequency result
-    wire [3:0] digit0 = freq_result % 10;
-    wire [3:0] digit1 = (freq_result / 10) % 10;
-    wire [3:0] digit2 = (freq_result / 100) % 10;
-    wire [3:0] digit3 = (freq_result / 1000) % 10;
-    wire [3:0] digit4 = (freq_result / 10000) % 10;
-    wire [3:0] digit5 = (freq_result / 100000) % 10;
+    wire [3:0] digit0 = wave_freq % 10;
+    wire [3:0] digit1 = (wave_freq / 10) % 10;
+    wire [3:0] digit2 = (wave_freq / 100) % 10;
+    wire [3:0] digit3 = (wave_freq / 1000) % 10;
+    wire [3:0] digit4 = (wave_freq / 10000) % 10;
+    wire [3:0] digit5 = (wave_freq / 100000) % 10;
 
     assign HEX0 = seg7(digit0);
     assign HEX1 = seg7(digit1);
@@ -160,8 +176,7 @@ module ch6_frequency_detector (
     // ================================================================
     //  Status LEDs
     // ================================================================
-    assign LEDR[0] = measurement_active;
-    assign LEDR[9:1] = 9'b0;
+    assign LEDR[9:0] = 9'b0;
 
     // ================================================================
     //  UART RX (for future commands)
