@@ -25,7 +25,7 @@ module challenge_pll (
 );
 
     localparam integer CLK0_MULTIPLY_BY = 1;
-    localparam integer CLK0_DIVIDE_BY   = 2;
+    localparam integer CLK0_DIVIDE_BY   = 1;
 
     wire [5:0] pll_clk_bus;
     wire [1:0] inclk_bus;

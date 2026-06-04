@@ -35,6 +35,16 @@ env/
 *.qws
 *.bak
 *.rpt
+fp8_adder.done
+fp8_adder.fit.smsg
+fp8_adder.fit.summary
+fp8_adder.jdi
+fp8_adder.map.summary
+fp8_adder.pin
+fp8_adder.pof
+fp8_adder.sld
+fp8_adder.sof
+fp8_adder.sta.summary
 
 # PlatformIO build / library cache
 **/.pio/
