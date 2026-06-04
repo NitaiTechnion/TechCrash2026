@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge 6: Frequency Detector &mdash; Chip Design Hackathon 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0071c5;
+            --accent: #00c7b7;
+            --bg-dark: #0b1121;
+            --bg-section: #111827;
+            --bg-card: #1a2332;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-bright: #f1f5f9;
+            --border: #2d3a4a;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .back-link { display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        h1 { font-size: 2.2rem; color: var(--text-bright); margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem; }
+        h2 { font-size: 1.4rem; color: var(--accent); margin: 2rem 0 1rem; }
+        h3 { font-size: 1.1rem; color: var(--text-bright); margin: 1.5rem 0 0.5rem; }
+        p { margin-bottom: 1rem; }
+        ul { margin: 0.5rem 0 1rem 1.5rem; }
+        li { margin-bottom: 0.3rem; }
+        code {
+            background: var(--bg-card);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .badge {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--bg-dark);
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 0.2em 0.7em;
+            border-radius: 20px;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .diagram {
+            background: var(--bg-section);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+        .diagram svg {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 0.6rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: var(--bg-card);
+            color: var(--accent);
+            font-weight: 600;
+        }
+        td { color: var(--text); }
+
+        .code-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.2rem;
+            overflow-x: auto;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 1rem 0;
+            white-space: pre;
+        }
+
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .file-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+        }
+        .file-card h4 {
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+        .file-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <a href="../../index.html#getstarted" class="back-link">&larr; Back to Main Site</a>
+
+    <span class="badge">Challenge</span>
+    <h1>Challenge 6: Frequency Detector</h1>
+    <p class="subtitle">Measure an input signal frequency on the FPGA and communicate results to the ESP32 via UART.</p>
+
+    <!-- ===== OVERVIEW ===== -->
+    <h2>What It Does</h2>
+    <p>A frequency measurement system that:</p>
+    <ul>
+        <li><strong>FPGA:</strong> Detects rising edges on an input signal, counts edges over a measurement window, and calculates frequency.</li>
+        <li><strong>Display:</strong> Shows measured frequency on HEX0–HEX5 7-segment displays.</li>
+        <li><strong>Communication:</strong> Transmits frequency data to ESP32 over UART for logging or further processing.</li>
+        <li><strong>Control:</strong> ESP32 sends commands to configure measurement window and trigger measurements.</li>
+    </ul>
+
+    <!-- ===== KEY SPECS ===== -->
+    <h2>Key Specifications</h2>
+    <ul>
+        <li>Frequency input via Arduino header pin (to be assigned)</li>
+        <li>Measurement window: configurable (e.g., 1 second, 10 seconds)</li>
+        <li>Output range: 0 Hz to 999,999 Hz (6 digits on HEX displays)</li>
+        <li>UART communication: 9600 baud, 8N1</li>
+        <li>Clock source: 50 MHz MAX10 internal clock</li>
+    </ul>
+
+    <!-- ===== BLOCK DIAGRAM ===== -->
+    <h2>Block Diagram</h2>
+    <div class="diagram">
+        <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+            <!-- FPGA Block -->
+            <rect x="30" y="30" width="350" height="240" rx="12" fill="#1a2332" stroke="#0071c5" stroke-width="2"/>
+            <text x="205" y="62" text-anchor="middle" fill="#f1f5f9" font-size="16" font-weight="700">DE10-Lite FPGA</text>
+
+            <!-- Freq Counter -->
+            <rect x="55" y="80" width="140" height="40" rx="6" fill="#0b1121" stroke="#2d3a4a"/>
+            <text x="125" y="105" text-anchor="middle" fill="#00c7b7" font-size="11">Edge Counter</text>
+
+            <!-- Calculation -->
+            <rect x="55" y="140" width="140" height="40" rx="6" fill="#0b1121" stroke="#2d3a4a"/>
+            <text x="125" y="165" text-anchor="middle" fill="#00c7b7" font-size="11">Frequency Calc</text>
+
+            <!-- Display -->
+            <rect x="220" y="80" width="140" height="100" rx="6" fill="#0b1121" stroke="#2d3a4a"/>
+            <text x="290" y="105" text-anchor="middle" fill="#e2e8f0" font-size="11">HEX0–HEX5</text>
+            <text x="290" y="125" text-anchor="middle" fill="#e2e8f0" font-size="10">(Display MHz)</text>
+            <text x="290" y="145" text-anchor="middle" fill="#e2e8f0" font-size="10">(or Hz)</text>
+            <text x="290" y="165" text-anchor="middle" fill="#e2e8f0" font-size="10">(configurable)</text>
+
+            <!-- UART TX -->
+            <rect x="55" y="200" width="140" height="30" rx="6" fill="#0b1121" stroke="#2d3a4a"/>
+            <text x="125" y="220" text-anchor="middle" fill="#00c7b7" font-size="11">UART TX (9600)</text>
+
+            <!-- Arrows -->
+            <path d="M125 120 L125 140" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+            <path d="M195 170 L220 130" stroke="#94a3b8" stroke-width="1.5"/>
+            <path d="M125 180 L125 200" stroke="#94a3b8" stroke-width="1.5"/>
+
+            <!-- ESP32 Block -->
+            <rect x="420" y="30" width="350" height="240" rx="12" fill="#1a2332" stroke="#00c7b7" stroke-width="2"/>
+            <text x="595" y="62" text-anchor="middle" fill="#f1f5f9" font-size="16" font-weight="700">ESP32 DevKit</text>
+
+            <!-- Commands -->
+            <rect x="445" y="80" width="140" height="40" rx="6" fill="#0b1121" stroke="#2d3a4a"/>
+            <text x="515" y="105" text-anchor="middle" fill="#00c7b7" font-size="11">Command Parser</text>
+
+            <!-- UART RX -->
+            <rect x="445" y="140" width="140" height="40" rx="6" fill="#0b1121" stroke="#2d3a4a"/>
+            <text x="515" y="165" text-anchor="middle" fill="#00c7b7" font-size="11">UART RX (9600)</text>
+
+            <!-- Logging/Display -->
+            <rect x="610" y="80" width="140" height="100" rx="6" fill="#0b1121" stroke="#2d3a4a"/>
+            <text x="680" y="105" text-anchor="middle" fill="#e2e8f0" font-size="11">Logging / OLED</text>
+            <text x="680" y="125" text-anchor="middle" fill="#e2e8f0" font-size="10">(Serial console)</text>
+
+            <!-- Arrow connections -->
+            <path d="M515 120 L515 140" stroke="#94a3b8" stroke-width="1.5"/>
+            <path d="M585 160 L610 130" stroke="#94a3b8" stroke-width="1.5"/>
+        </svg>
+    </defs>
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+            <polygon points="0,0 10,5 0,10" fill="#94a3b8"/>
+        </marker>
+    </defs>
+    </div>
+
+    <!-- ===== WIRING ===== -->
+    <h2>Wiring &amp; Pin Assignments</h2>
+    <p><strong>Arduino Header (Default):</strong></p>
+    <table>
+        <tr>
+            <th>Signal</th>
+            <th>Arduino Pin</th>
+            <th>FPGA Pin</th>
+            <th>ESP32 Pin</th>
+        </tr>
+        <tr>
+            <td>UART TX (FPGA → ESP32)</td>
+            <td>IO1</td>
+            <td>AB6</td>
+            <td>GPIO17 (RX)</td>
+        </tr>
+        <tr>
+            <td>UART RX (ESP32 → FPGA)</td>
+            <td>IO0</td>
+            <td>AB5</td>
+            <td>GPIO16 (TX)</td>
+        </tr>
+        <tr>
+            <td>Frequency Input (to be assigned)</td>
+            <td>IO2–IO15 (any available)</td>
+            <td>See Quartus project</td>
+            <td>N/A</td>
+        </tr>
+        <tr>
+            <td>GND</td>
+            <td>GND</td>
+            <td>GND</td>
+            <td>GND</td>
+        </tr>
+    </table>
+
+    <!-- ===== PROJECT STRUCTURE ===== -->
+    <h2>Project Structure</h2>
+    <div class="file-list">
+        <div class="file-card">
+            <h4>fpga/</h4>
+            <p>Quartus project with frequency counter RTL</p>
+        </div>
+        <div class="file-card">
+            <h4>fpga/src/ch6_frequency_detector.sv</h4>
+            <p>Main SystemVerilog module (top-level)</p>
+        </div>
+        <div class="file-card">
+            <h4>esp32/src/main.cpp</h4>
+            <p>ESP32 command parser and logging</p>
+        </div>
+        <div class="file-card">
+            <h4>esp32/platformio.ini</h4>
+            <p>PlatformIO configuration</p>
+        </div>
+    </div>
+
+    <!-- ===== DEVELOPMENT NOTES ===== -->
+    <h2>Development Notes</h2>
+    <ul>
+        <li>Start with a 1-second measurement window for simplicity.</li>
+        <li>Use a counter that counts on every rising edge of the input signal.</li>
+        <li>Trigger readout on the falling edge of a strobe signal (or use a timer).</li>
+        <li>Consider range: if input is &lt; 1 MHz, display in Hz; if ≥ 1 MHz, display in MHz.</li>
+        <li>Ensure UART communication is robust (checksums, handshake, etc.).</li>
+    </ul>
+
+    <!-- ===== BUILD &amp; RUN ===== -->
+    <h2>Build &amp; Run</h2>
+    <h3>FPGA (Quartus):</h3>
+    <div class="code-block">quartus_sh.exe --flow compile ch6_frequency_detector
+quartus_pgm.exe -c "USB-Blaster [USB-0]" -m JTAG -o "P;output_files/ch6_frequency_detector.sof"</div>
+
+    <h3>ESP32 (PlatformIO):</h3>
+    <div class="code-block">cd esp32
+pio run -t upload
+pio device monitor</div>
+
+    <footer>
+        &copy; 2026 CrashTech VLSI Hackathon. All rights reserved.
+    </footer>
+
+</div>
+</body>
+</html>
