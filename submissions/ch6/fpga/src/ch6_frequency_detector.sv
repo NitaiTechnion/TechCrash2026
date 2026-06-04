@@ -109,7 +109,8 @@ module ch6_frequency_detector (
 	 reg [31:0] rx_delay;
 	 bit waiting;
 
-    wire [15:0] wave_freq =  16'd8000 * wave_posedge_cnt / wave_samp_cnt;
+	 wire [31:0] wave_freq_tmp = 16'd8000 * wave_posedge_cnt;
+    wire [15:0] wave_freq =  wave_freq_tmp / wave_samp_cnt;
 
     // ================================================================
     //  RX wave data and estimate frequency
@@ -206,8 +207,7 @@ module ch6_frequency_detector (
     // ================================================================
     //  Status LEDs
     // ================================================================
-    assign LEDR[9] = 1'b0;
-	 assign LEDR[8:1] = wave_idx;
+    assign LEDR[9:1] = wave_freq[11:3];
 	 assign LEDR[0] = waiting;
 
     // ================================================================
