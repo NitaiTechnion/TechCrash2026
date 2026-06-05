@@ -16,7 +16,8 @@ module game_controller_top (
     input   [1:0]   KEY,
     output  [9:0]   LEDR,
     output  [7:0]   HEX0, HEX1, HEX2, HEX3, HEX4, HEX5,
-    inout   [15:0]  ARDUINO_IO
+    inout   [15:0]  ARDUINO_IO,
+    inout           ARDUINO_RESET_N
 );
 
     wire clk = MAX10_CLK1_50;
@@ -26,6 +27,7 @@ module game_controller_top (
     assign ARDUINO_IO[0]    = 1'bz;
     assign ARDUINO_IO[1]    = uart_tx_out;
     assign ARDUINO_IO[15:2] = 14'bz;
+    assign ARDUINO_RESET_N  = 1'bz;
 
     // ---- Unused outputs ----
     assign LEDR  = 10'b0;
