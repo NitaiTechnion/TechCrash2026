@@ -1,8 +1,10 @@
-import argparse
 import re
 import time
 
 HEX_FRAME_RE = re.compile(r"^[0-9A-Fa-f]{3}$")
+DEFAULT_PORT = "COM3"
+DEFAULT_BAUD = 115200
+RECONNECT_DELAY = 1.0
 
 
 def decode_packed_hex(frame: str) -> dict:
@@ -29,7 +31,7 @@ def open_serial(port: str, baud: int):
     return serial.Serial(port=port, baudrate=baud, timeout=0.5)
 
 
-def run_reader(port: str, baud: int, reconnect: bool, reconnect_delay: float) -> None:
+def run_reader(port: str = DEFAULT_PORT, baud: int = DEFAULT_BAUD) -> None:
     print("[INFO] Opening serial port {} @ {}...".format(port, baud))
 
     while True:
@@ -74,10 +76,8 @@ def run_reader(port: str, baud: int, reconnect: bool, reconnect_delay: float) ->
                 break
             else:
                 raise
-            if not reconnect:
-                break
-            print("[INFO] Reconnecting in {:.1f}s...".format(reconnect_delay))
-            time.sleep(reconnect_delay)
+            print("[INFO] Reconnecting in {:.1f}s...".format(RECONNECT_DELAY))
+            time.sleep(RECONNECT_DELAY)
         except KeyboardInterrupt:
             print("\n[INFO] Stopped by user.")
             break
@@ -86,34 +86,8 @@ def run_reader(port: str, baud: int, reconnect: bool, reconnect_delay: float) ->
                 ser.close()
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Read compact FPGA controller frames (HHH) from ESP32 USB serial.",
-    )
-    parser.add_argument("--port", required=True, help="Serial port (example: COM3)")
-    parser.add_argument("--baud", type=int, default=115200, help="Serial baud rate")
-    parser.add_argument(
-        "--reconnect",
-        action="store_true",
-        help="Auto-reconnect if the serial device disconnects",
-    )
-    parser.add_argument(
-        "--reconnect-delay",
-        type=float,
-        default=1.0,
-        help="Seconds between reconnect attempts",
-    )
-    return parser.parse_args()
-
-
 def main() -> None:
-    args = parse_args()
-    run_reader(
-        port=args.port,
-        baud=args.baud,
-        reconnect=args.reconnect,
-        reconnect_delay=args.reconnect_delay,
-    )
+    run_reader()
 
 
 if __name__ == "__main__":
