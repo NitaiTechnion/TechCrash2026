@@ -149,6 +149,8 @@ TechCrash2026/
 │   ├── alive_test/               # Full kit smoke test
 │   │   ├── esp32/                # PlatformIO project
 │   │   └── fpga/                 # Quartus project
+│   ├── bad_apple_oled/           # ESP32 OLED animation demo
+│   │   └── esp32/                # PlatformIO project
 │   └── internet_clock/           # WiFi NTP clock on 7-segment
 │       ├── esp32/
 │       └── fpga/
