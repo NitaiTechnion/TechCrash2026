@@ -39,17 +39,37 @@
 </head>
 <body>
   <main class="card">
-    <h1>Embedded Flappy Bird</h1>
-    <p>ESP32 renders gameplay on OLED. FPGA reads <code>KEY[0]</code> and <code>SW[3:0]</code>, then streams flap + difficulty over UART.</p>
+    <h1>Neural Flappy Trainer</h1>
+    <p>ESP32 trains a population of neural-network birds directly on the OLED Flappy simulation. FPGA still streams difficulty from <code>SW[3:0]</code> over UART.</p>
+    <h2>Training Model</h2>
+    <ul>
+      <li>Population: <code>30</code> birds simulated in parallel</li>
+      <li>Network per bird: <code>4 inputs -> 4 hidden neurons -> 1 output</code></li>
+      <li>Inputs: bird height, bird velocity, next obstacle distance, gap-center distance</li>
+      <li>Output: flap decision threshold</li>
+    </ul>
+    <h2>Evolution</h2>
+    <ul>
+      <li>All birds fly the same deterministic obstacle course within each generation</li>
+      <li>Fitness favors survival time and pipe score</li>
+      <li>Top birds are kept, children copy selected parents, and mutations add exploration</li>
+    </ul>
+    <h2>OLED Display</h2>
+    <ul>
+      <li>Generation number</li>
+      <li>Alive count</li>
+      <li>Best generation score and all-time best score</li>
+      <li>Compact live playfield with population dots</li>
+    </ul>
     <h2>UART Protocol</h2>
     <ul>
-      <li><code>FLAP\n</code>: sent on each valid KEY[0] press</li>
-      <li><code>DIFF:n\n</code>: periodic difficulty stream, <code>n</code> from 0 to 15</li>
+      <li><code>DIFF:n\n</code>: periodic difficulty stream, <code>n</code> from 0 to F</li>
+      <li><code>FLAP\n</code>: optional manual generation advance/restart</li>
     </ul>
     <h2>Controls</h2>
     <ul>
-      <li>KEY[0]: flap while playing, restart when game over</li>
-      <li>SW[3:0]: difficulty (0 easy, 15 hard)</li>
+      <li>SW[3:0]: difficulty (0 easy, F hard)</li>
+      <li>KEY[0]: force next generation</li>
     </ul>
     <h2>Build</h2>
     <ul>
